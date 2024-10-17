@@ -1,9 +1,11 @@
 use regex::Regex;
+use similar::TextDiff;
+
 use std::{env, fs, sync::LazyLock};
 
 static LISTINGS: LazyLock<Regex> = LazyLock::new(|| {
     Regex::new(
-        r"(?m)^```rust\n(?<code>[^`]+?)\n?```\n\(\[Listing `(?<listing>[\s\S]+?)`\]\((?<link>.*?)\)",
+        r"(?m)^```rust\n(?<code>[^`]+?\n)?```\n\(\[Listing `(?<listing>[\s\S]+?)`\]\((?<link>.*?)\)",
     )
     .unwrap()
 });
@@ -14,20 +16,34 @@ fn main() -> anyhow::Result<()> {
         eprintln!("Usage: up2code [PATH, ...]");
         return Ok(());
     }
+    let http = reqwest::blocking::Client::builder().build()?;
     for path in &paths {
         let text = fs::read_to_string(path)?;
-        // println!("{text}");
-        LISTINGS.captures_iter(&text).for_each(|m| {
-            if let Some(code) = m.name("code") {
-                println!("Code: {}", code.as_str());
+        for m in LISTINGS.captures_iter(&text) {
+            let Some(code) = m.name("code") else { continue };
+            let Some(listing) = m.name("listing") else {
+                continue;
+            };
+            let Some(link) = m.name("link") else { continue };
+            let raw_url = String::from(link.as_str());
+            match http.get(raw_url + "?raw=true").send() {
+                Err(e) => {
+                    println!("{path}: {e}");
+                }
+                Ok(resp) => {
+                    if let Err(e) = resp.error_for_status_ref() {
+                        println!("{path}: {e}");
+                        continue
+                    } 
+                    let text = resp.text()?;
+                    if !text.contains(code.as_str()) {
+                        println!("{path}: Listing {}", listing.as_str());
+                        let diff = TextDiff::from_lines(code.as_str(), &text);
+                        print!("{}", diff.unified_diff());
+                    }
+                }
             }
-            if let Some(listing) = m.name("listing") {
-                println!("Listing: {}", listing.as_str());
-            }
-            if let Some(link) = m.name("link") {
-                println!("Link: {}", link.as_str());
-            }
-        });
+        }
     }
     Ok(())
 }

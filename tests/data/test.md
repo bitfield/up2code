@@ -18,8 +18,9 @@ So here's what our test looks like once we've moved it into its own module:
 ```rust
 #[cfg(test)]
 mod tests {
-    use super::*;
     use std::io;
+
+    use super::*;
 
     #[test]
     fn count_lines_fn_counts_lines_in_input() {
