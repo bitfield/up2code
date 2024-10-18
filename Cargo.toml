@@ -1,7 +1,23 @@
 [package]
 name = "up2code"
 version = "0.1.0"
+authors = ["John Arundel <john@bitfieldconsulting.com>"]
 edition = "2021"
+description = """
+up2code is a tool to check code listings in Markdown files against a GitHub repository.
+"""
+keywords = ["web", "cli", "utility", "text"]
+categories = ["command-line-utilities"]
+license = "MIT OR Apache-2.0"
+readme = "README.md"
+documentation = "https://docs.rs/up2code"
+homepage = "https://github.com/bitfield/up2code"
+repository = "https://github.com/bitfield/up2code"
+exclude = ["/.github/"]
+
+[badges]
+github = { repository = "bitfield/up2code", workflow = "CI" }
+maintenance = { status = "actively-developed" }
 
 [dependencies]
 anyhow = "1.0.89"
