@@ -1,35 +1,15 @@
-The conventional answer to this in Rust is to put our unit tests inside a module (`mod tests`, let's say, though the name is up to us), and then protect that module with a `cfg(test)` attribute:
+**SOLUTION:** This is one way to do it:
 
 \vspace{5pt}
 ```rust
-#[cfg(test)]
-mod tests {
-    // tests go here
+#[test]
+fn append_appends_line_to_existing_file() {
+    let dir = tempdir().unwrap();
+    let path = dir.path().join("logbook.txt");
+    fs::write(&path, "hello\n").unwrap();
+    append(&path, "logbook").unwrap();
+    let text = fs::read_to_string(path).unwrap();
+    assert_eq!(text, "hello\nlogbook\n", "wrong text");
 }
 ```
-
-`cfg` turns compilation on or off for the item it's attached to, based on the value of some expression. `cfg(test)` means the `tests` module will be compiled only if we're running in `cargo test` mode. Otherwise it will be ignored entirely, saving time, energy, and the planet.
-
-### Anatomy of a test module
-
-So here's what our test looks like once we've moved it into its own module:
-
-\vspace{5pt}
-```rust
-#[cfg(test)]
-mod tests {
-    use std::io;
-
-    use super::*;
-
-    #[test]
-    fn count_lines_fn_counts_lines_in_input() {
-        let input = io::Cursor::new("line 1\nline2\n");
-        let lines = count_lines(input);
-        assert_eq!(2, lines);
-    }
-}
-```
-([Listing `counter_2`](https://github.com/bitfield/tsr-tools/blob/main/counter_2/src/lib.rs))
-
-A module can have its own `use` declarations, which is handy since we often want to `use` things in tests that we don't need in the library itself (`std::io` in this example).
+([Listing `logbook_4`](https://github.com/bitfield/tsr-tools/blob/main/logbook_4/src/lib.rs))

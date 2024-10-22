@@ -1,6 +1,6 @@
 use std::env;
 
-use up2code::listings;
+use up2code::{diff, listings};
 
 fn main() -> anyhow::Result<()> {
     let paths: Vec<String> = env::args().skip(1).collect();
@@ -11,7 +11,7 @@ fn main() -> anyhow::Result<()> {
     for path in paths {
         for listing in listings(&path)? {
             let listing = listing.check()?;
-            if let Some(diff) = listing.diff() {
+            if let Some(diff) = diff(&listing.local, &listing.remote) {
                 println!("{path}: {}", listing.title);
                 println!("{diff}");
             }

@@ -17,8 +17,9 @@
 //!
 //! It will try to fetch the raw code page from the specified URL (appending
 //! "?raw=true"), reporting any errors. If the fetch succeeds, it will check
-//! that the Markdown listing is an exact substring of the GitHub listing,
-//! reporting any mismatch as a unified diff:
+//! that the Markdown listing is an exact substring of the GitHub listing
+//! (possibly indented by four spaces), reporting any mismatch as a unified
+//! diff:
 //!
 //! ```text
 //! tests/data/test.md: Listing `counter_2`
@@ -38,7 +39,7 @@
 use regex::Regex;
 use similar::TextDiff;
 
-use std::{fs, io, path::Path, sync::LazyLock};
+use std::{fs, io::{self, BufRead, BufReader}, path::Path, sync::LazyLock};
 
 static LISTINGS: LazyLock<Regex> = LazyLock::new(|| {
     Regex::new(r"(?m)^```.*?\n(?<code>[^`]+?\n)?```\n\(\[(?<title>[\s\S]+?)\]\((?<link>.*?)\)")
@@ -65,7 +66,7 @@ pub fn listings(path: impl AsRef<Path>) -> io::Result<Vec<Listing>> {
         let url = String::from(link.as_str());
         listings.push(Listing {
             title: String::from(title.as_str()),
-            code: String::from(code.as_str()),
+            local: String::from(code.as_str()),
             url: String::from(url.as_str()),
         });
     }
@@ -75,7 +76,7 @@ pub fn listings(path: impl AsRef<Path>) -> io::Result<Vec<Listing>> {
 /// A listing as parsed out of the Markdown source.
 pub struct Listing {
     pub title: String,
-    pub code: String,
+    pub local: String,
     pub url: String,
 }
 
@@ -90,8 +91,8 @@ impl Listing {
         resp.error_for_status_ref()?;
         Ok(CheckedListing {
             title: self.title,
-            code: self.code,
-            text: resp.text()?,
+            local: self.local,
+            remote: resp.text()?,
         })
     }
 }
@@ -100,19 +101,48 @@ impl Listing {
 /// version from GitHub.
 pub struct CheckedListing {
     pub title: String,
-    pub code: String,
-    pub text: String,
+    pub local: String,
+    pub remote: String,
 }
 
-impl CheckedListing {
-    #[must_use]
-    /// Diffs the Markdown listing against its canonical GitHub version.
-    pub fn diff(&self) -> Option<String> {
-        if self.text.contains(&self.code) {
-            None
-        } else {
-            let diff = TextDiff::from_lines(&self.code, &self.text);
-            Some(format!("{}", diff.unified_diff()))
-        }
+#[must_use]
+/// Diffs the Markdown listing against its canonical GitHub version.
+pub fn diff(local: &str, remote: &str) -> Option<String> {
+    if remote.contains(local) | remote.contains(&indent(local)) {
+        None
+    } else {
+        let diff = TextDiff::from_lines(local, remote);
+        Some(format!("{}", diff.unified_diff()))
+    }
+}
+
+fn indent(input: &str) -> String {
+    let mut output = String::new();
+    let input = input.as_bytes();
+    let input = BufReader::new(input);
+    for line_res in input.lines() {
+        output.push_str("    ");
+        output.push_str(&line_res.unwrap());
+        output.push('\n');
+    }
+    output
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn indent_indents_code_by_four_spaces() {
+        let input = "foo\n    bar\nbaz\n";
+        let want = "    foo\n        bar\n    baz\n";
+        assert_eq!(indent(input), want, "wrong indentation");
+    }
+    
+    #[test]
+    fn diff_matches_indented_code() {
+        let local = "#[test]\nfn foo() {}";
+        let remote = "    #[test]\n    fn foo() {}\n";
+        assert_eq!(diff(&local, &remote), None);
     }
 }
