@@ -39,7 +39,12 @@
 use regex::Regex;
 use similar::TextDiff;
 
-use std::{fs, io::{self, BufRead, BufReader}, path::Path, sync::LazyLock};
+use std::{
+    fs,
+    io::{self, BufRead, BufReader},
+    path::Path,
+    sync::LazyLock,
+};
 
 static LISTINGS: LazyLock<Regex> = LazyLock::new(|| {
     Regex::new(r"(?m)^```.*?\n(?<code>[^`]+?\n)?```\n\(\[(?<title>[\s\S]+?)\]\((?<link>.*?)\)")
@@ -138,7 +143,7 @@ mod tests {
         let want = "    foo\n        bar\n    baz\n";
         assert_eq!(indent(input), want, "wrong indentation");
     }
-    
+
     #[test]
     fn diff_matches_indented_code() {
         let local = "#[test]\nfn foo() {}";
