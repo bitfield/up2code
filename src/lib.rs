@@ -98,6 +98,7 @@ impl Listing {
             title: self.title,
             local: self.local,
             remote: resp.text()?,
+            url: self.url,
         })
     }
 }
@@ -108,6 +109,7 @@ pub struct CheckedListing {
     pub title: String,
     pub local: String,
     pub remote: String,
+    pub url: String,
 }
 
 #[must_use]
@@ -126,8 +128,11 @@ fn indent(input: &str) -> String {
     let input = input.as_bytes();
     let input = BufReader::new(input);
     for line_res in input.lines() {
-        output.push_str("    ");
-        output.push_str(&line_res.unwrap());
+        let line = line_res.unwrap();
+        if !line.is_empty() {
+            output.push_str("    ");
+            output.push_str(&line);
+        }
         output.push('\n');
     }
     output
@@ -138,9 +143,9 @@ mod tests {
     use super::*;
 
     #[test]
-    fn indent_indents_code_by_four_spaces() {
-        let input = "foo\n    bar\nbaz\n";
-        let want = "    foo\n        bar\n    baz\n";
+    fn indent_indents_nonblank_lines_by_four_spaces() {
+        let input = "foo\n    bar\n\nbaz\n";
+        let want = "    foo\n        bar\n\n    baz\n";
         assert_eq!(indent(input), want, "wrong indentation");
     }
 

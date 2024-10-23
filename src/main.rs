@@ -12,7 +12,7 @@ fn main() -> anyhow::Result<()> {
         for listing in listings(&path)? {
             let listing = listing.check()?;
             if let Some(diff) = diff(&listing.local, &listing.remote) {
-                println!("{path}: {}", listing.title);
+                println!("{path}: {} - {}", listing.title, listing.url);
                 println!("{diff}");
             }
         }
