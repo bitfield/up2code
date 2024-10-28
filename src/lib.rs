@@ -115,7 +115,10 @@ pub struct CheckedListing {
 #[must_use]
 /// Diffs the Markdown listing against its canonical GitHub version.
 pub fn diff(local: &str, remote: &str) -> Option<String> {
-    if remote.contains(local) | remote.contains(&indent(local)) {
+    if remote.contains(local)
+        | remote.contains(&indent(local, "    "))
+        | remote.contains(&indent(local, "\t"))
+    {
         None
     } else {
         let diff = TextDiff::from_lines(local, remote);
@@ -123,14 +126,14 @@ pub fn diff(local: &str, remote: &str) -> Option<String> {
     }
 }
 
-fn indent(input: &str) -> String {
+fn indent(input: &str, prefix: &'static str) -> String {
     let mut output = String::new();
     let input = input.as_bytes();
     let input = BufReader::new(input);
     for line_res in input.lines() {
         let line = line_res.unwrap();
         if !line.is_empty() {
-            output.push_str("    ");
+            output.push_str(prefix);
             output.push_str(&line);
         }
         output.push('\n');
@@ -143,10 +146,10 @@ mod tests {
     use super::*;
 
     #[test]
-    fn indent_indents_nonblank_lines_by_four_spaces() {
+    fn indent_indents_nonblank_lines_by_given_prefix() {
         let input = "foo\n    bar\n\nbaz\n";
-        let want = "    foo\n        bar\n\n    baz\n";
-        assert_eq!(indent(input), want, "wrong indentation");
+        assert_eq!(indent(input, "    "), "    foo\n        bar\n\n    baz\n", "wrong indentation");
+        assert_eq!(indent(input, "\t"), "\tfoo\n\t    bar\n\n\tbaz\n", "wrong indentation");
     }
 
     #[test]
