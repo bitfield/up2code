@@ -148,8 +148,16 @@ mod tests {
     #[test]
     fn indent_indents_nonblank_lines_by_given_prefix() {
         let input = "foo\n    bar\n\nbaz\n";
-        assert_eq!(indent(input, "    "), "    foo\n        bar\n\n    baz\n", "wrong indentation");
-        assert_eq!(indent(input, "\t"), "\tfoo\n\t    bar\n\n\tbaz\n", "wrong indentation");
+        assert_eq!(
+            indent(input, "    "),
+            "    foo\n        bar\n\n    baz\n",
+            "wrong indentation"
+        );
+        assert_eq!(
+            indent(input, "\t"),
+            "\tfoo\n\t    bar\n\n\tbaz\n",
+            "wrong indentation"
+        );
     }
 
     #[test]
