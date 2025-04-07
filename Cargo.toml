@@ -1,6 +1,6 @@
 [package]
 name = "up2code"
-version = "0.4.0"
+version = "0.4.1"
 authors = ["John Arundel <john@bitfieldconsulting.com>"]
 edition = "2021"
 description = """
