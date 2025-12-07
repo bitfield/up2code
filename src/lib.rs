@@ -164,6 +164,6 @@ mod tests {
     fn diff_matches_indented_code() {
         let local = "#[test]\nfn foo() {}";
         let remote = "    #[test]\n    fn foo() {}\n";
-        assert_eq!(diff(&local, &remote), None);
+        assert_eq!(diff(local, remote), None);
     }
 }

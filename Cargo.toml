@@ -1,6 +1,6 @@
 [package]
 name = "up2code"
-version = "0.4.1"
+version = "0.4.2"
 authors = ["John Arundel <john@bitfieldconsulting.com>"]
 edition = "2021"
 description = """
@@ -22,5 +22,5 @@ maintenance = { status = "actively-developed" }
 [dependencies]
 anyhow = "1.0.89"
 regex = "1.11.0"
-reqwest = { version = "0.12.8", features = ["blocking"] }
+reqwest = { version = "0.12.24", features = ["blocking"] }
 similar = "2.6.0"
