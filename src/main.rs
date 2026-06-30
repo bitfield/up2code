@@ -14,9 +14,9 @@ fn main() -> anyhow::Result<()> {
             if let Some(diff) = diff(&listing.local, &listing.remote) {
                 println!("{path}: {} - {}", listing.title, listing.url);
                 println!("{diff}");
-            };
+            }
             // Sleep to avoid hitting GitHub API rate limit
-            thread::sleep(Duration::from_millis(1000));
+            thread::sleep(Duration::from_secs(1));
         }
     }
     Ok(())
